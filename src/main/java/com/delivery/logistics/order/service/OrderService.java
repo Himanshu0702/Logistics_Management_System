@@ -3,12 +3,14 @@ package com.delivery.logistics.order.service;
 import com.delivery.logistics.common.exception.*;
 import com.delivery.logistics.customer.address.model.Address;
 import com.delivery.logistics.customer.address.repository.AddressRepository;
+import com.delivery.logistics.notification.event.OrderConfirmedEvent;
 import com.delivery.logistics.order.dto.CreateOrderRequest;
 import com.delivery.logistics.order.dto.UpdateOrderStatusRequest;
 import com.delivery.logistics.order.model.Order;
 import com.delivery.logistics.order.model.OrderStatus;
 import com.delivery.logistics.order.repository.OrderRepository;
 import org.apache.coyote.BadRequestException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,10 +24,12 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final AddressRepository addressRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public OrderService(OrderRepository orderRepository, AddressRepository addressRepository) {
+    public OrderService(OrderRepository orderRepository, AddressRepository addressRepository,  ApplicationEventPublisher applicationEventPublisher) {
         this.orderRepository = orderRepository;
         this.addressRepository = addressRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Transactional
@@ -75,7 +79,17 @@ public class OrderService {
             );
         }
         order.setStatus(newStatus);
-        return orderRepository.save(order);
+        Order saveOrder =  orderRepository.save(order);
+
+        if(newStatus == OrderStatus.CONFIRMED)
+        {
+            applicationEventPublisher.publishEvent(
+                    new OrderConfirmedEvent(saveOrder.getCustomer().getId(),
+                            saveOrder.getId(),
+                            saveOrder.getOrderNumber())
+            );
+        }
+        return saveOrder;
     }
 
     public Order getOrderById(UUID orderId) {

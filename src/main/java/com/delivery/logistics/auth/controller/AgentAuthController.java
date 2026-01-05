@@ -4,6 +4,7 @@ import com.delivery.logistics.auth.dto.AgentLoginRequest;
 import com.delivery.logistics.auth.dto.AgentLoginResponse;
 import com.delivery.logistics.auth.service.AgentAuthService;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -16,7 +17,7 @@ public class AgentAuthController {
     }
 
     @PostMapping("/auth/agents/login")
-    public AgentLoginResponse login(AgentLoginRequest agentLoginRequest) {
+    public AgentLoginResponse login(@RequestBody  AgentLoginRequest agentLoginRequest) {
         return agentAuthService.login(agentLoginRequest);
     }
 }

@@ -27,35 +27,35 @@ public class AddressController {
     }
 
     @PostMapping("/customers/{customerId}/addresses")
-    public AddressResponse createAddress(@PathVariable UUID customerID,@RequestBody @Valid CreateAddressRequest createAddressRequest) {
-        Address address = addressService.createAddress(customerID, createAddressRequest);
+    public AddressResponse createAddress(@PathVariable UUID customerId,@RequestBody @Valid CreateAddressRequest createAddressRequest) {
+        Address address = addressService.createAddress(customerId, createAddressRequest);
         return toResponse(address);
     }
 
     @PatchMapping("/customers/addresses/{addressId}")
-    public AddressResponse updateAddress(@PathVariable UUID addressID,@RequestBody @Valid UpdateAddressRequest updateAddressRequest) {
-        Address address = addressService.updateAddress(addressID, updateAddressRequest);
+    public AddressResponse updateAddress(@PathVariable UUID addressId,@RequestBody @Valid UpdateAddressRequest updateAddressRequest) {
+        Address address = addressService.updateAddress(addressId, updateAddressRequest);
         return toResponse(address);
     }
 
     @GetMapping("/customers/{customerId}/addresses")
-    public List<AddressResponse> getAllAddresses(@PathVariable UUID customerID) {
-        List<Address> addresses = addressService.findAllAddressesByCustomer(customerID);
-        return addressService.findAllAddressesByCustomer(customerID)
+    public List<AddressResponse> getAllAddresses(@PathVariable UUID customerId) {
+        List<Address> addresses = addressService.findAllAddressesByCustomer(customerId);
+        return addressService.findAllAddressesByCustomer(customerId)
                 .stream()
                 .map(AddressMapper::toResponse)
                 .toList();
     }
 
     @DeleteMapping("/customers/addresses/{addressId}")
-    public ResponseEntity<Void> deleteAddress(@PathVariable UUID addressID) {
-        addressService.deleteAddress(addressID);
+    public ResponseEntity<Void> deleteAddress(@PathVariable UUID addressId) {
+        addressService.deleteAddress(addressId);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/customers/{customerID}/addresses/default")
-    public AddressResponse getDefaultAddress(@PathVariable UUID customerID) {
-        Address address = addressService.getDefaultAddress(customerID);
+    @GetMapping("/customers/{customerId}/addresses/default")
+    public AddressResponse getDefaultAddress(@PathVariable UUID customerId) {
+        Address address = addressService.getDefaultAddress(customerId);
         if(address == null) {
             throw new AddressNotFoundException("Address not found");
         }

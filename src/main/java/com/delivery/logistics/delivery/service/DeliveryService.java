@@ -10,9 +10,12 @@ import com.delivery.logistics.delivery.dto.UpdateDeliveryStatusRequest;
 import com.delivery.logistics.delivery.model.Delivery;
 import com.delivery.logistics.delivery.model.DeliveryStatus;
 import com.delivery.logistics.delivery.repository.DeliveryRepository;
+import com.delivery.logistics.notification.event.DeliveryAssignedEvent;
+import com.delivery.logistics.notification.event.DeliveryPickedUpEvent;
 import com.delivery.logistics.order.model.Order;
 import com.delivery.logistics.order.model.OrderStatus;
 import com.delivery.logistics.order.repository.OrderRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,11 +28,13 @@ public class DeliveryService {
     private final DeliveryRepository deliveryRepository;
     private final OrderRepository orderRepository;
     private final AgentRepository agentRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public DeliveryService(DeliveryRepository deliveryRepository, OrderRepository orderRepository,  AgentRepository agentRepository) {
+    public DeliveryService(DeliveryRepository deliveryRepository, OrderRepository orderRepository,  AgentRepository agentRepository,  ApplicationEventPublisher applicationEventPublisher) {
         this.deliveryRepository = deliveryRepository;
         this.orderRepository = orderRepository;
         this.agentRepository = agentRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Transactional
@@ -55,8 +60,8 @@ public class DeliveryService {
 
         Delivery delivery =  deliveryRepository.findByOrderId(orderId).orElseThrow(()-> new DeliveryNotFoundException("Delivery not found"));
 
-        if (delivery.getDeliveryAgent() == null ||
-                !delivery.getDeliveryAgent().getId().equals(agentIdFromToken)) {
+        if ((delivery.getDeliveryAgent() == null ||
+                !delivery.getDeliveryAgent().getId().equals(agentIdFromToken)) && !delivery.getStatus().equals(DeliveryStatus.CREATED)) {
             throw new UnauthorizedException("You are not allowed to update this delivery");
         }
 
@@ -81,8 +86,24 @@ public class DeliveryService {
 
         }
         delivery.setStatus(newStatus);
-        return deliveryRepository.save(delivery);
+        Delivery saveDelivery =  deliveryRepository.save(delivery);
 
+        if(newStatus == DeliveryStatus.ASSIGNED) {
+            applicationEventPublisher.publishEvent(
+                    new DeliveryAssignedEvent(saveDelivery.getDeliveryAgent().getId(),
+                            saveDelivery.getId(),
+                            saveDelivery.getOrder().getId())
+            );
+        }
+
+        if(newStatus == DeliveryStatus.PICKED_UP) {
+            applicationEventPublisher.publishEvent(
+                    new DeliveryPickedUpEvent(saveDelivery.getOrder().getCustomer().getId(),
+                            saveDelivery.getId())
+            );
+        }
+
+        return saveDelivery;
     }
 
     public Delivery getDeliveryByOrderId(UUID orderId) {
