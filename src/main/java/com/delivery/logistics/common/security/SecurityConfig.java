@@ -29,7 +29,7 @@ public class SecurityConfig {
                 .sessionManagement(something -> something.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception.authenticationEntryPoint((request, response, authException) -> response.setStatus(HttpServletResponse.SC_UNAUTHORIZED)))
                 .authorizeHttpRequests(
-                        auth -> auth.requestMatchers("/auth/**", "/customers", "/agents").permitAll()
+                        auth -> auth.requestMatchers("/auth/**", "/customers", "/agents", "/swagger-ui.html", "/swagger-ui/**", "/v3/**").permitAll()
                                 .requestMatchers("/customers/**").hasRole("CUSTOMER")
                                 .requestMatchers("/agents/**").hasRole("AGENT")
                                 .anyRequest()

@@ -41,7 +41,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         boolean skip =
                 (uri.equals("/customers") && method.equals("POST"))
                         || (uri.equals("/auth/login") && method.equals("POST"))
-                        || (uri.equals("/agents/login") && method.equals("POST"));
+                        || (uri.equals("/agents/login") && method.equals("POST"))
+                        || uri.startsWith("/v3/api-docs")
+                        || uri.startsWith("/swagger-ui");
 
         System.out.println("SKIP JWT FILTER = " + skip);
 
