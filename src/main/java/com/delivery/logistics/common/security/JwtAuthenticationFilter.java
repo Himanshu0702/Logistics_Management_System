@@ -1,6 +1,7 @@
 package com.delivery.logistics.common.security;
 
 import com.delivery.logistics.common.enums.Role;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -105,7 +106,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Continue request
             filterChain.doFilter(request, response);
 
-        } catch (Exception ex) {
+        } catch (JwtException | IllegalArgumentException ex ) {
             /**
              * ❌ Token present but invalid / malformed / expired
              * → 401 ONLY here
